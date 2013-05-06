@@ -188,7 +188,6 @@ static mmask_t   defmmask = 0;              /* Ncurses: mouse event mask */
 
 /* Functions */
 /* f_* functions can be linked to an action or keybinding */
-static void f_center(const Arg*);
 static void f_delete(const Arg*);
 static void f_extsel(const Arg*);
 static void f_findbw(const Arg*);
@@ -282,15 +281,6 @@ static regex_t *syntax_res[LENGTH(syntaxes)][SYN_COLORS];
 
 /* F_* FUNCTIONS
 	Can be linked to an action or keybinding. Always return void and take const Arg* */
-
-void /* Make cursor line the one in the middle of the screen if possible, refresh screen */
-f_center(const Arg *arg) {
-	int i=LINES2/2;
-	
-	scrline=fcur.l;
-	while((i -= VLINES(scrline)) > 0 && scrline->prev) scrline=scrline->prev;
-	i_resize();
-}
 
 void /* Delete text as per arg->m. Your responsibility: call only if t_rw() */
 f_delete(const Arg *arg) {
@@ -814,13 +804,13 @@ i_edit(void) {
         /* Command mode */
 		if(!(statusflags&S_InsEsc) && t_com()) { 
             /* check for mode switch */
-            if (memcmp(c, modekeys[1].keyv.c, sizeof modekeys[1].keyv.c) == 0 && i_dotests(modekeys[1].test)) {
+            if (c[0] == modekeys[1].keyv.c[0] && i_dotests(modekeys[1].test)) {
                 statusflags&=~(S_GroupUndo);
                 modekeys[1].func(&(modekeys[1].arg));
                 continue;
             }
 			for(i=0; i<LENGTH(stdkeys); i++) {
-				if(memcmp(c, stdkeys[i].keyv.c, sizeof stdkeys[i].keyv.c) == 0 && i_dotests(stdkeys[i].test) ) {
+				if(c[0] == stdkeys[i].keyv.c[0] && i_dotests(stdkeys[i].test) ) {
 					if(stdkeys[i].func != f_insert) statusflags&=~(S_GroupUndo);
 					stdkeys[i].func(&(stdkeys[i].arg));
 					break;
@@ -832,13 +822,13 @@ i_edit(void) {
         /* Insert mode */
 	    statusflags&=~(S_InsEsc); 
         /* check for mode switch */
-        if (memcmp(c, modekeys[0].keyv.c, sizeof modekeys[0].keyv.c) == 0 && i_dotests(modekeys[0].test)) {
+        if (c[0] == modekeys[0].keyv.c[0] && i_dotests(modekeys[0].test)) {
             statusflags&=~(S_GroupUndo);
             modekeys[0].func(&(modekeys[0].arg));
             continue;
         }
         /* other control keys are ignored */
-        if (ISCTRL(c[0])) { tmptitle="Command ignored!"; continue; }
+        if (ISCTRL(c[0]) && c[0] != 0x0A && c[0] != 0x09) { tmptitle="Command ignored!"; continue; }
         if(t_rw()) f_insert(&(const Arg){ .v = c });
 		else tmptitle="WARNING! File is read-only!!!";
 	}
