@@ -43,7 +43,7 @@ Where:
 Future
 ------
 
-Silicon (hopefully) retains all of the functionality of Sandy. In addition, there are a few more planned features:
+Silicon (hopefully) retains all of the functionality of Sandy. In addition, there are a few more planned features (in no particular order):
 
 * Multiple cursors
 * Line numbers
