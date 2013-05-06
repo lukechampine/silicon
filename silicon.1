@@ -1,8 +1,8 @@
-.TH SANDY 1 sandy\-VERSION
+.TH SILICON 1 silicon\-VERSION
 .SH NAME
-sandy \- simple ncurses text editor
+silicon \- simple ncurses text editor
 .SH SYNOPSIS
-.B sandy
+.B si
 .RB [ \-adhruS ]
 .RB [ \-t
 .IR tabstop ]
@@ -10,10 +10,10 @@ sandy \- simple ncurses text editor
 .IR syntax ]
 .RI [ file |\-]
 .SH DESCRIPTION
-sandy is a simple modeless ncurses text editor.  It loads and saves files and
+silicon is a simple modal ncurses text editor.  It loads and saves files and
 lets you perform basic editing and pipe the selection through arbitrary
 commands.  A small degree of external control can be achieved by writing to a
-named pipe.  Sandy can also capture text from the standard input and edit it
+named pipe.  Silicon can also capture text from the standard input and edit it
 instead of a file as well as dump the buffer to the standard output instead of
 writing it to a file.
 .SH OPTIONS
@@ -42,12 +42,8 @@ Use selected tabstop in characters.
 .B \-v
 Prints version information to stderr, then exits.
 .SH USAGE
-The default key\-bindings try to stick to the "emacs\-mode" present in modern
-shells (specifically
-.IR mksh (1)),
-which actually differs a bit from what
-.IR emacs (1)
-does.  Text is selected manually with the mouse or keyboard, or automtically
+The default key\-bindings try to stick to the vim bindings.
+Text is selected manually with the mouse or keyboard, or automatically
 when you search, pipe, undo or enter new text.  External input is handled using
 .IR dmenu (1)
 if the DISPLAY environment variable is set, read using
@@ -59,7 +55,7 @@ if DISPLAY is set, using a hidden file in the /tmp directory otherwise.
 Cursor movement bindings are used to move the text insertion point and
 optionally to select text.  Special keys (such as arrows, Home/End, Prev/Next)
 move the cursor and cancel any selection; they can be used to browse the text.
-Control or Meta keybindings extend or shrink the selection by moving the end
+Command mode keybindings extend or shrink the selection by moving the end
 at the insertion point; they are useful to perform minor changes without
 taking your fingers off the home row.  Remember to cancel the selection with
 Ctrl\-g before moving to select a new piece of text.
