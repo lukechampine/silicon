@@ -148,13 +148,13 @@ enum { /* To use in Undo.flags */
 
 /* Constants */
 static const char *envs[EnvLast] = {
-	[EnvFind]   = "SANDY_FIND",
-	[EnvPipe]   = "SANDY_PIPE",
-	[EnvLine]   = "SANDY_LINE",
-	[EnvOffset] = "SANDY_OFFSET",
-	[EnvFile]   = "SANDY_FILE",
-	[EnvSyntax] = "SANDY_SYNTAX",
-	[EnvFifo]   = "SANDY_FIFO",
+	[EnvFind]   = "SILICON_FIND",
+	[EnvPipe]   = "SILICON_PIPE",
+	[EnvLine]   = "SILICON_LINE",
+	[EnvOffset] = "SILICON_OFFSET",
+	[EnvFile]   = "SILICON_FILE",
+	[EnvSyntax] = "SILICON_SYNTAX",
+	[EnvFifo]   = "SILICON_FIFO",
 };
 
 /* Variables */
@@ -165,7 +165,7 @@ static Filepos   fsel;                      /* Selection point on file */
 static Filepos   fcur;                      /* Insert position on file, cursor, current position */
 static Filepos   fmrk = { NULL, 0 };        /* Mark */
 static int       syntx = -1;                /* Current syntax index */
-static int       commandmode = 1;            /* Current editor mode */
+static int       commandmode = 1;           /* Current editor mode */
 static regex_t  *find_res[2];               /* Compiled regex for search term */
 static int       sel_re = 0;                /* Index to the above, we keep 2 REs so regexec does not segfault */
 static char     *fifopath = NULL;           /* Path to command fifo */
@@ -830,6 +830,7 @@ i_edit(void) {
         /* other control keys are ignored */
         if (ISCTRL(c[0]) && c[0] != 0x0A && c[0] != 0x09) { tmptitle="Command ignored!"; continue; }
         if(t_rw()) f_insert(&(const Arg){ .v = c });
+
 		else tmptitle="WARNING! File is read-only!!!";
 	}
 }
@@ -1294,6 +1295,7 @@ i_termwininit(void) {
 	nodelay(textwin, FALSE);
 	wtimeout(textwin, 0);
 	curs_set(1);
+    mouseinterval(20);
 	scrollok(textwin, FALSE);
 #if HANDLE_MOUSE
 	for(i=0; i<LENGTH(clks); i++) defmmask|=clks[i].mask;
