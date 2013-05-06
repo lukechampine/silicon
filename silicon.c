@@ -503,7 +503,7 @@ f_toggle(const Arg *arg) {
 		i_setfindterm(getenv(envs[EnvFind]));
 	break;
 	case S_Warned: /* Set warning title */
-		tmptitle="WARNING! File Modified!!!";
+		tmptitle="WARNING! Unsaved changes!!!";
 	break;
 	}
 }
@@ -789,7 +789,7 @@ i_edit(void) {
 			continue;
 		}
 
-		/* Mundane characters are processed later */
+		/* Process special chars first (UTF-8, arrow keys, esc, backspace, etc) */
 		c[0]=(char)ch;
 		if(c[0]==0x1B || (isutf8 && !ISASCII(c[0]))) {
 			/* Multi-byte char or escape sequence */
@@ -1290,12 +1290,13 @@ i_termwininit(void) {
 		textwin=newwin(lines-1,cols,1,0);
 	}
 	idlok(textwin, TRUE);
-	keypad(textwin, TRUE);
+	keypad(textwin, TRUE); 
 	meta(textwin, TRUE);
 	nodelay(textwin, FALSE);
 	wtimeout(textwin, 0);
 	curs_set(1);
     mouseinterval(20);
+    ESCDELAY = 25;
 	scrollok(textwin, FALSE);
 #if HANDLE_MOUSE
 	for(i=0; i<LENGTH(clks); i++) defmmask|=clks[i].mask;
