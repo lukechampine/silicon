@@ -25,7 +25,7 @@ Running silicon
 -------------
 Use the following syntax:
 
-si [-r] [-S | -s SYNTAX] [-t TABSTOP] [File]
+si [-a] [-r] [-S | -s SYNTAX] [-t TABSTOP] [File]
 
 Where:
 
@@ -49,5 +49,5 @@ Silicon (hopefully) retains all of the functionality of Sandy. In addition, ther
 * Line numbers
 * Fuzzy search for commands (via dmenu?)
 * Bracket matching
-
-ncurses is lacking a lot of functionality though (like modifier support), so we'll see just how much is possible. If it becomes too much of a hindrance I may consider rewriting the input handling entirely.
+* Number modifier
+* Bind multiple functions to a single keypress

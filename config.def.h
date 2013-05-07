@@ -69,12 +69,13 @@ static void f_pipenull(const Arg*);
 /*          otherwise it may not mean what you think. See man 7 ascii for more info */
 #define CONTROL(ch)   {(ch ^ 0x40)}
 #define META(ch)      { 0x1B, ch }
+#define KEY_ESC       { 0x1B }
 
-static const Key modekeys[] = { /* Mode switching keys for insert and command mode */
-/* please don't use CONTROL('I'), it will break your TAB key (blame ncurses for that) */
-{ .keyv.c = META('i'), { t_ins,  0,    0,   0 }, f_toggle, { .i = S_Mode } },
-{ .keyv.c = {'i'}, { t_com,  0,    0,   0 }, f_toggle, { .i = S_Mode } },
-};
+/* Key to switch from insert mode to command mode */
+/* please don't use ctrl-i or ctrl-j, it will break your Tab/Enter key */
+static const Key InsToComKey =
+/* keyv.c,                  tests,                     func,       arg */
+{ .keyv.c = KEY_ESC,        { t_ins,  0,    0,   0 },  f_toggle,   { .i = S_Mode } };
 
 static const Key curskeys[] = { /* Plain keys here, no CONTROL or META */
 /* keyv.i,                  tests,                     func,       arg */
@@ -101,10 +102,9 @@ static const Key curskeys[] = { /* Plain keys here, no CONTROL or META */
 };
 
 static const Key stdkeys[] = {
-/* keyv.c,         test,                     func,        arg */
-{ .keyv.i = '@', { 0,     0,    0,   0 },  f_move,      { .m = m_tomark } },
-{ .keyv.i = ' ', { 0,     0,    0,   0 },  f_mark,      { 0 } },
-{ .keyv.i = '`', { 0,     0,    0,   0 },  f_mark,      { 0 } },
+/* keyv.c,         test,                   func,        arg */
+{ .keyv.i = 'i', { t_com, 0,    0,   0 },  f_toggle,    { .i = S_Mode } }, /* mode switch */
+{ .keyv.i = '\'',{ 0,     0,    0,   0 },  f_move,      { .m = m_tomark } },
 { .keyv.i = 'a', { t_ai,  0,    0,   0 },  f_move,      { .m = m_smartbol } },
 { .keyv.i = 'a', { 0,     0,    0,   0 },  f_move,      { .m = m_bol } },
 { .keyv.i = 'b', { 0,     0,    0,   0 },  f_move,      { .m = m_prevchar } },
@@ -120,14 +120,14 @@ static const Key stdkeys[] = {
 { .keyv.i = 'h', { 0,     0,    0,   0 },  f_move,      { .m = m_prevchar } },
 { .keyv.i = 'H', { t_rw,  0,    0,   0 },  f_delete,    { .m = m_prevword } },
 { .keyv.i = 'i', { t_rw,  0,    0,   0 },  f_insert,    { .v = "\t" } },
-{ .keyv.i = 'J', { t_rw,  t_ai, 0,   0 },  f_pipeai,    AUTOINDENT } ,
+{ .keyv.i = 'J', { t_rw,  0,    0,   0 },  f_pipeline,  { .v = "tr -d '\n'" } }, /* Join lines */
 { .keyv.i = 'j', { 0,     0,    0,   0 },  f_move,      { .m = m_prevline } },
 { .keyv.i = 'k', { 0,     0,    0,   0 },  f_move,      { .m = m_nextline } },
 { .keyv.i = 'K', { t_rw,  0,    0,   0 },  f_delete,    { .m = m_eol } },
 { .keyv.i = 'l', { 0,     0,    0,   0 },  f_move,      { .m = m_nextchar } },
 { .keyv.i = 'l', { t_sel, t_rw, 0,   0 },  f_pipe,      { .v = "tr [A-Z] [a-z]" } }, /* Lowercase */
 { .keyv.i = 'M', { t_rw,  t_ai, 0,   0 },  f_pipeai,    AUTOINDENT } ,
-{ .keyv.i = 'm', { t_rw,  0,    0,   0 },  f_insert,    { .v = "\n" } },
+{ .keyv.i = 'm', { 0,     0,    0,   0 },  f_mark,      { 0 } },
 { .keyv.i = 'M', { 0,     0,    0,   0 },  f_move,      { .m = m_nextline } },
 { .keyv.i = 'N', { 0,     0,    0,   0 },  f_move,      { .m = m_nextline } },
 { .keyv.i = 'O', { t_sel, 0,    0,   0 },  f_select,    { .m = m_tosel } }, /* Swap fsel and fcur */
@@ -142,8 +142,8 @@ static const Key stdkeys[] = {
 { .keyv.i = 's', { t_sel, 0,    0,   0 },  f_findfw,    { 0 } },
 { .keyv.i = 'S', { 0,     0,    0,   0 },  f_spawn,     FIND },
 { .keyv.i = 's', { 0,     0,    0,   0 },  f_findfw,    { 0 } },
-{ .keyv.i = 'u', { t_redo,t_rw, 0,   0 },  f_undo,      { .i = -1 } },
-{ .keyv.i = 'U', { t_rw,  0,    0,   0 },  f_repeat,    { 0 } },
+{ .keyv.i = 'u', { t_undo,t_rw, 0,   0 },  f_undo,      { .i = 1 } },
+{ .keyv.i = 'U', { t_redo,t_rw, 0,   0 },  f_undo,      { .i = -1 } },
 { .keyv.i = 'u', { t_sel, t_rw, 0,   0 },  f_pipe,      { .v = "tr [a-z] [A-Z]" } }, /* Uppercase */
 { .keyv.i = 'V', { 0,     0,    0,   0 },  f_move,      { .m = m_prevscr } },
 { .keyv.i = 'v', { 0,     0,    0,   0 },  f_move,      { .m = m_nextscr } },
@@ -157,13 +157,11 @@ static const Key stdkeys[] = {
 { .keyv.i = '\\',{ t_rw,  0,    0,   0 },  f_spawn,     PIPE },
 { .keyv.i = '\\',{ t_rw,  0,    0,   0 },  f_spawn,     SED },
 { .keyv.i = ']', { 0,     0,    0,   0 },  f_extsel,    { .i = ExtDefault } },
-{ .keyv.i = '6', { t_rw,  0,    0,   0 },  f_pipeline,  { .v = "tr -d '\n'" } }, /* Join lines */
 { .keyv.i = '5', { t_sel, t_rw, 0,   0 },  f_spawn,     REPLACE },
-{ .keyv.i = '_', { t_undo,t_rw, 0,   0 },  f_undo,      { .i = 1 } },
 { .keyv.i = '?', { t_rw,  0,    0,   0 },  f_delete,    { .m = m_prevchar } },
 { .keyv.i = ',', { 0,     0,    0,   0 },  f_move,      { .m = m_bof } },
-{ .keyv.i = '.', { 0,     0,    0,   0 },  f_move,      { .m = m_eof } },
-{ .keyv.i = '$', { 0,     0,    0,   0 },  f_moveboth,      { .m = m_eol } },
+{ .keyv.i = '.', { t_rw,  0,    0,   0 },  f_repeat,    { 0 } },
+{ .keyv.i = '$', { 0,     0,    0,   0 },  f_moveboth,  { .m = m_eol } },
 };
 
 #if HANDLE_MOUSE

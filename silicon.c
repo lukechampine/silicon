@@ -33,6 +33,7 @@
 			((unsigned char)ch>=0xC0 ? 2 : 1)))))
 #define ISASCII(ch)   ((unsigned char)ch < 0x80)
 #define ISCTRL(ch)    (((unsigned char)ch < 0x20) || (ch == 0x7F))
+#define ISNONPRINT(ch)(ISCTRL(ch) && ch != 0x09 && ch != 0x0A)
 #define ISFILL(ch)    (isutf8 && !ISASCII(ch) && (unsigned char)ch<=0xBF)
 #define ISBLANK(ch)   (ch == ' ' || ch == '\t' || ch == '\0')
 #define ISWORDBRK(ch) (ISASCII(ch) && (ch < 0x30 || \
@@ -803,12 +804,6 @@ i_edit(void) {
         
         /* Command mode */
 		if(!(statusflags&S_InsEsc) && t_com()) { 
-            /* check for mode switch */
-            if (c[0] == modekeys[1].keyv.c[0] && i_dotests(modekeys[1].test)) {
-                statusflags&=~(S_GroupUndo);
-                modekeys[1].func(&(modekeys[1].arg));
-                continue;
-            }
 			for(i=0; i<LENGTH(stdkeys); i++) {
 				if(c[0] == stdkeys[i].keyv.c[0] && i_dotests(stdkeys[i].test) ) {
 					if(stdkeys[i].func != f_insert) statusflags&=~(S_GroupUndo);
@@ -821,17 +816,20 @@ i_edit(void) {
 
         /* Insert mode */
 	    statusflags&=~(S_InsEsc); 
-        /* check for mode switch */
-        if (c[0] == modekeys[0].keyv.c[0] && i_dotests(modekeys[0].test)) {
+        /* check for mode switch key */
+        if (memcmp(c, InsToComKey.keyv.c, sizeof InsToComKey.keyv.c) == 0 && i_dotests(InsToComKey.test)) {
             statusflags&=~(S_GroupUndo);
-            modekeys[0].func(&(modekeys[0].arg));
+            InsToComKey.func(&(InsToComKey.arg));
             continue;
         }
         /* other control keys are ignored */
-        if (ISCTRL(c[0]) && c[0] != 0x0A && c[0] != 0x09) { tmptitle="Command ignored!"; continue; }
-        if(t_rw()) f_insert(&(const Arg){ .v = c });
+        if (ISNONPRINT(c[0])) { tmptitle="Command ignored!"; continue; }
 
-		else tmptitle="WARNING! File is read-only!!!";
+        /* everything else gets printed */
+        if(t_rw())
+            f_insert(&(const Arg){ .v = c });
+		else
+            tmptitle="WARNING! File is read-only!!!";
 	}
 }
 
@@ -1670,7 +1668,6 @@ m_tomark(Filepos pos) {
 		pos.o=fmrk.o;
 		if(pos.o>pos.l->len) pos.o=pos.l->len;
 		FIXNEXT(pos);
-		f_mark(NULL);
 		break;
 	}
 	return pos;
