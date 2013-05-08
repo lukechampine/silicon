@@ -83,14 +83,14 @@ typedef struct {                      /** A keybinding */
 typedef struct {                      /** A mouse click */
 	mmask_t mask;                 /* Mouse mask */
 	bool place[2];                /* Place fcur / fsel at click place before testing */
-	bool (*test[3])(void);        /* Conditions to match, make sure the last one is 0x00 */
+	bool (*test[4])(void);        /* Conditions to match, make sure the last one is 0x00 */
 	void (*func)(const Arg *arg); /* Function to perform */
 	const Arg arg;                /* Argument to func() */
 } Click;
 
 typedef struct {                      /** A command read at the fifo */
 	const char *re_text;          /* A regex to match the command, must have a parentheses group for argument */
-	bool (*test[3])(void);        /* Conditions to match, make sure the last one is 0x00 */
+	bool (*test[4])(void);        /* Conditions to match, make sure the last one is 0x00 */
 	void (*func)(const Arg *arg); /* Function to perform, argument is determined as arg->v from regex above */
 	const Arg arg;                /* Argument to func(), if empty will fill .v = re_match */
 } Command;
@@ -735,10 +735,11 @@ i_deltext(Filepos pos0, Filepos pos1) {
 bool /* test an array of t_ functions */
 i_dotests(bool (*const a[])(void)) {
 	int i;
-    
-    for(i=0; i<4; i++)
-        if(a[i] && !a[i]()) return FALSE;
-	
+    for(i=0; i<4; i++) {
+        if (a[i] && !a[i]())
+            return FALSE;
+    }
+
     return TRUE;
 }
 
@@ -1515,6 +1516,7 @@ i_usage(void) {
 
 bool /* Write buffer to disk */
 i_writefile(char *fname) {
+
 	int fd=1; /* default: write to stdout */
 	bool wok=TRUE;
 	Line *l;

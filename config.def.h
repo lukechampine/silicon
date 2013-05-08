@@ -215,35 +215,35 @@ static const Chord chordkeys[] = {
 /*Mouse clicks */
 static const Click clks[] = {
 /* mouse mask,           fcur / fsel,      tests,               func,       arg */
-{BUTTON1_CLICKED,        { TRUE , TRUE  }, { 0,     0,     0 }, 0,          { 0 } },
-{BUTTON3_CLICKED,        { TRUE , FALSE }, { t_sel, 0,     0 }, f_pipero,   TOSEL },
-{BUTTON2_CLICKED,        { FALSE, FALSE }, { 0,     0,     0 }, f_pipenull, FROMSEL },
+{BUTTON1_CLICKED,        { TRUE , TRUE  }, { 0,     0,     0,  0 }, 0,          { 0 } },
+{BUTTON3_CLICKED,        { TRUE , FALSE }, { t_sel, 0,     0,  0 }, f_pipero,   TOSEL },
+{BUTTON2_CLICKED,        { FALSE, FALSE }, { 0,     0,     0,  0 }, f_pipenull, FROMSEL },
 //{BUTTON4_CLICKED,        { FALSE, FALSE }, { 0,     0,     0 }, f_move,     { .m = m_prevscr } },
 //{BUTTON5_CLICKED,        { FALSE, FALSE }, { 0,     0,     0 }, f_move,     { .m = m_nextscr } },
 /* ^^ NCurses is a sad old library.... it does not include button 5 nor cursor movement in its mouse declaration by default */
-{BUTTON1_DOUBLE_CLICKED, { TRUE , TRUE  }, { 0,     0,     0 }, f_extsel,   { .i = ExtWord }  },
-{BUTTON1_TRIPLE_CLICKED, { TRUE , TRUE  }, { 0,     0,     0 }, f_extsel,   { .i = ExtLines }  },
+{BUTTON1_DOUBLE_CLICKED, { TRUE , TRUE  }, { 0,     0,     0,  0 }, f_extsel,   { .i = ExtWord }  },
+{BUTTON1_TRIPLE_CLICKED, { TRUE , TRUE  }, { 0,     0,     0,  0 }, f_extsel,   { .i = ExtLines }  },
 };
 #endif /* HANDLE_MOUSE */
 
 /* Commands read at the fifo */
 static const Command cmds[] = { /* REMEMBER: if(arg == 0) arg.v=regex_match */
 /* regex,           tests,              func      arg */
-{"^([0-9]+)$",      { 0,     0,    0 }, f_line ,  { 0 } },
-{"^/(.*)$",         { 0,     0,    0 }, f_findfw, { 0 } },
-{"^\\?(.*)$",       { 0,     0,    0 }, f_findbw, { 0 } },
-{"^![ \t]*(.*)$",   { t_rw,  0,    0 }, f_pipe,   { 0 } },
-{"^![ /t]*(.*)$",   { 0,     0,    0 }, f_pipero, { 0 } },
-{"^w[ \t]*(.*)$",   { t_mod, t_rw, 0 }, f_save,   { 0 } },
-{"^syntax (.*)$",   { 0,     0,    0 }, f_syntax, { 0 } },
-{"^offset (.*)$",   { 0,     0,    0 }, f_offset, { 0 } },
-{"^icase$",         { 0,     0,    0 }, f_toggle, { .i = S_CaseIns } },
-{"^ro$",            { 0,     0,    0 }, f_toggle, { .i = S_Readonly } },
-{"^ai$",            { 0,     0,    0 }, f_toggle, { .i = S_AutoIndent } },
-{"^dump$",          { 0,     0,    0 }, f_toggle, { .i = S_DumpStdout } },
-{"^q$",             { t_mod, 0,    0 }, f_toggle, { .i = S_Warned } },
-{"^q$",             { 0,     0,    0 }, f_toggle, { .i = S_Running } },
-{"^q!$",            { 0,     0,    0 }, f_toggle, { .i = S_Running } },
+{"^([0-9]+)$",      { 0,     0,    0,  0 }, f_line ,  { 0 } },
+{"^/(.*)$",         { 0,     0,    0,  0 }, f_findfw, { 0 } },
+{"^\\?(.*)$",       { 0,     0,    0,  0 }, f_findbw, { 0 } },
+{"^![ \t]*(.*)$",   { t_rw,  0,    0,  0 }, f_pipe,   { 0 } },
+{"^![ /t]*(.*)$",   { 0,     0,    0,  0 }, f_pipero, { 0 } },
+{"^w[ \t]*(.*)$",   { t_mod, t_rw, 0,  0 }, f_save,   { 0 } },
+{"^syntax (.*)$",   { 0,     0,    0,  0 }, f_syntax, { 0 } },
+{"^offset (.*)$",   { 0,     0,    0,  0 }, f_offset, { 0 } },
+{"^icase$",         { 0,     0,    0,  0 }, f_toggle, { .i = S_CaseIns } },
+{"^ro$",            { 0,     0,    0,  0 }, f_toggle, { .i = S_Readonly } },
+{"^ai$",            { 0,     0,    0,  0 }, f_toggle, { .i = S_AutoIndent } },
+{"^dump$",          { 0,     0,    0,  0 }, f_toggle, { .i = S_DumpStdout } },
+{"^q$",             { t_mod, 0,    0,  0 }, f_toggle, { .i = S_Warned } },
+{"^q$",             { 0,     0,    0,  0 }, f_toggle, { .i = S_Running } },
+{"^q!$",            { 0,     0,    0,  0 }, f_toggle, { .i = S_Running } },
 };
 
 /* Syntax color definition */
