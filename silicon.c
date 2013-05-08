@@ -111,6 +111,14 @@ struct Undo {                       /** Undo information */
 	Undo *prev;                 /* Previous undo/redo in the ring */
 };
 
+typedef struct {                    /** A macro, i.e. function composition */
+    int keyv;                   /* NCurses code */
+    bool (*test[4])(void);      /* Conditions to match */
+    void (*func[4])             /* functions to perform, in order */
+        (const Arg *arg);
+    const Arg args[4];          /* corresponding arguments (1 per function) */
+} Macro;
+
 /* ENUMS */
 /* Colors */
 enum { DefFG, CurFG, SelFG, SpcFG, CtrlFG, Syn0FG, Syn1FG, Syn2FG, Syn3FG, Syn4FG, Syn5FG, Syn6FG, Syn7FG, LastFG, };
@@ -454,7 +462,7 @@ f_spawn(const Arg *arg) {
 	if((pid=fork()) == 0) {
 		/* setsid() used to be called here, but it does not look as a good idea anymore. TODO: test and delete! */
 		execvp(((char **)arg->v)[0], (char **)arg->v);
-		fprintf(stderr, "sandy: execvp %s", ((char **)arg->v)[0]);
+		fprintf(stderr, "silicon: execvp %s", ((char **)arg->v)[0]);
 		perror(" failed");
 		exit(0);
 	} else if(pid>0) waitpid(pid, NULL, 0);
@@ -726,17 +734,17 @@ i_deltext(Filepos pos0, Filepos pos1) {
 
 bool /* test an array of t_ functions */
 i_dotests(bool (*const a[])(void)) {
-	int i=0;
-
-	while(1) /* Somehow LENGTH() did not work here */
-		if(a[i]) {
-			if(!a[i++]()) return FALSE;
-		} else return TRUE;
+	int i;
+    
+    for(i=0; i<4; i++)
+        if(a[i] && !a[i]()) return FALSE;
+	
+    return TRUE;
 }
 
 void /* Main editing loop */
 i_edit(void) {
-	int ch, i;
+	int ch, i, j;
 	char c[7];
 	fd_set fds;
 	Filepos oldsel, oldcur;
@@ -801,9 +809,22 @@ i_edit(void) {
 				c[i]=0x00;
 			wtimeout(textwin, 0);
 		} else c[1]=c[2]=c[3]=c[4]=c[5]=c[6]=0x00;
-        
+
         /* Command mode */
 		if(!(statusflags&S_InsEsc) && t_com()) { 
+            /* check macro keybindings */
+            for(i=0; i<LENGTH(macrokeys); i++) {
+                if(c[0] == macrokeys[i].keyv && i_dotests(macrokeys[i].test)) {
+                    for(j=0; j<4; j++) {
+                        if(macrokeys[i].func[j] == 0) continue;
+                        if(macrokeys[i].func[j] != f_insert)
+                            statusflags &= ~(S_GroupUndo);
+                        macrokeys[i].func[j](&(macrokeys[i].args[j]));
+                    }
+                    break;
+                }
+            }
+            /* check standard keybindings */
 			for(i=0; i<LENGTH(stdkeys); i++) {
 				if(c[0] == stdkeys[i].keyv.c[0] && i_dotests(stdkeys[i].test) ) {
 					if(stdkeys[i].func != f_insert) statusflags&=~(S_GroupUndo);
@@ -978,7 +999,7 @@ i_pipetext(const char *cmd) {
 		close(pout[0]); close(pout[1]);
 		close(perr[0]); close(perr[1]);
 		execl("/bin/sh", "sh", "-c", cmd, NULL); /* I actually like it with sh so I can input pipes et al. */
-		fprintf(stderr, "sandy: execl sh -c %s", cmd);
+		fprintf(stderr, "silicon: execl sh -c %s", cmd);
 		perror(" failed");
 		exit(0);
 	}
@@ -1488,8 +1509,8 @@ i_update(void) {
 
 void /* Print help, die */
 i_usage(void) {
-	fputs("sandy - simple editor\n", stderr);
-	i_die("usage: sandy [-a] [-d] [-r] [-u] [-t TABSTOP] [-s SYNTAX] [file | -]\n");
+	fputs("silicon - simple editor\n", stderr);
+	i_die("usage: si [-a] [-d] [-r] [-u] [-t TABSTOP] [-s SYNTAX] [file | -]\n");
 }
 
 bool /* Write buffer to disk */
@@ -1767,7 +1788,7 @@ main(int argc, char **argv){
 			i++;
 			break;
 		} else if(!strcmp(argv[i], "-v"))
-			i_die("sandy-"VERSION", © 2011 sandy engineers, see LICENSE for details\n");
+			i_die("silicon-"VERSION", © 2011 silicon engineers, see LICENSE for details\n");
 		else
 			i_usage();
 	}
