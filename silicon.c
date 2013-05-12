@@ -34,6 +34,7 @@
 #define ISASCII(ch)   ((unsigned char)ch < 0x80)
 #define ISCTRL(ch)    (((unsigned char)ch < 0x20) || (ch == 0x7F))
 #define ISNONPRINT(ch)(ISCTRL(ch) && ch != 0x09 && ch != 0x0A)
+#define ISNUM(ch)     (ch >= 0x30 && ch < 0x3A)
 #define ISFILL(ch)    (isutf8 && !ISASCII(ch) && (unsigned char)ch<=0xBF)
 #define ISBLANK(ch)   (ch == ' ' || ch == '\t' || ch == '\0')
 #define ISWORDBRK(ch) (ISASCII(ch) && (ch < 0x30 || \
@@ -212,7 +213,7 @@ static void f_repeat(const Arg*);
 static void f_save(const Arg*);
 static void f_select(const Arg*);
 static void f_spawn(const Arg*);
-static void f_suspend(const Arg*);
+//static void f_suspend(const Arg*);
 static void f_syntax(const Arg *arg);
 static void f_toggle(const Arg *arg);
 static void f_undo(const Arg*);
@@ -252,9 +253,9 @@ static bool           i_writefile(char*);
 
 /* t_* functions to know whether to process an action or keybinding */
 static bool t_ai(void);
-static bool t_bol(void);
+//static bool t_bol(void);
 static bool t_com(void);
-static bool t_eol(void);
+//static bool t_eol(void);
 static bool t_ins(void);
 static bool t_mod(void);
 static bool t_rw(void);
@@ -745,7 +746,7 @@ i_dotests(bool (*const a[])(void)) {
 
 void /* Main editing loop */
 i_edit(void) {
-	int ch, i, j;
+	int ch, i, j, k, n;
 	char c[7];
 	fd_set fds;
 	Filepos oldsel, oldcur;
@@ -760,6 +761,9 @@ i_edit(void) {
 		else if(fcur.o != oldcur.o) fcur.l->dirty=TRUE;
 		oldsel=fsel, oldcur=fcur;
 		i_update();
+        
+        /* reset number of repetitions */
+        n=1;
 
 #ifdef HOOK_SELECT_ALL
 		if(fsel.l != fcur.l || fsel.o != fcur.o) {
@@ -799,7 +803,7 @@ i_edit(void) {
 			continue;
 		}
 
-		/* Process special chars first (UTF-8, arrow keys, esc, backspace, etc) */
+		/* Process multibyte chars (UTF-8, arrow keys, esc, backspace, etc) */
 		c[0]=(char)ch;
 		if(c[0]==0x1B || (isutf8 && !ISASCII(c[0]))) {
 			/* Multi-byte char or escape sequence */
@@ -811,8 +815,25 @@ i_edit(void) {
 			wtimeout(textwin, 0);
 		} else c[1]=c[2]=c[3]=c[4]=c[5]=c[6]=0x00;
 
+
         /* Command mode */
 		if(!(statusflags&S_InsEsc) && t_com()) { 
+            /* check for repeated command TODO: MAKE THIS BETTER BY PIPING IN INPUT DIRECTLY */
+            if(ISNUM(c[0])) {
+                n=c[0]-'0';
+                /* read in the entire number */
+                while(1) {
+                    /* wait for input */
+                    do {
+                        c[0]=wgetch(textwin);
+                    } while (!(ISASCII(c[0])));
+                    if(ISNUM(c[0]))
+                        n = 10*n + (c[0]-'0');
+                    else
+                        break;
+                } /* final command still winds up in c[0] */
+            }
+
             /* check macro keybindings */
             for(i=0; i<LENGTH(macrokeys); i++) {
                 if(c[0] == macrokeys[i].keyv && i_dotests(macrokeys[i].test)) {
@@ -820,7 +841,8 @@ i_edit(void) {
                         if(macrokeys[i].func[j] == 0) continue;
                         if(macrokeys[i].func[j] != f_insert)
                             statusflags &= ~(S_GroupUndo);
-                        macrokeys[i].func[j](&(macrokeys[i].args[j]));
+                        for(k=0; k<n; k++)
+                            macrokeys[i].func[j](&(macrokeys[i].args[j]));
                     }
                     break;
                 }
@@ -829,7 +851,8 @@ i_edit(void) {
 			for(i=0; i<LENGTH(stdkeys); i++) {
 				if(c[0] == stdkeys[i].keyv.c[0] && i_dotests(stdkeys[i].test) ) {
 					if(stdkeys[i].func != f_insert) statusflags&=~(S_GroupUndo);
-					stdkeys[i].func(&(stdkeys[i].arg));
+                    for(k=0; k<n; k++)
+					    stdkeys[i].func(&(stdkeys[i].arg));
 					break;
 				}
 			}
@@ -839,9 +862,9 @@ i_edit(void) {
         /* Insert mode */
 	    statusflags&=~(S_InsEsc); 
         /* check for mode switch key */
-        if (memcmp(c, InsToComKey.keyv.c, sizeof InsToComKey.keyv.c) == 0 && i_dotests(InsToComKey.test)) {
+        if (memcmp(c, InsToComKey, sizeof InsToComKey) == 0 && t_ins()) {
             statusflags&=~(S_GroupUndo);
-            InsToComKey.func(&(InsToComKey.arg));
+            f_toggle(&(const Arg){ .i = S_Mode });
             continue;
         }
         /* other control keys are ignored */

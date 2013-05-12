@@ -1,5 +1,5 @@
 /* A simplified way to customize */
-#define HILIGHT_CURRENT 1
+#define HILIGHT_CURRENT 0
 #define HILIGHT_SYNTAX  1
 #define SHOW_NONPRINT   0
 #define HANDLE_MOUSE    1
@@ -73,9 +73,7 @@ static void f_pipenull(const Arg*);
 
 /* Key to switch from insert mode to command mode */
 /* please don't use ctrl-i or ctrl-j, it will break your Tab/Enter key */
-static const Key InsToComKey =
-/* keyv.c,                  tests,                     func,       arg */
-{ .keyv.c = KEY_ESC,        { t_ins,  0,    0,   0 },  f_toggle,   { .i = S_Mode } };
+static const char InsToComKey[] = KEY_ESC;
 
 static const Key curskeys[] = { /* Plain keys here, no CONTROL or META */
 /* keyv.i,                  tests,                     func,       arg */
@@ -201,16 +199,36 @@ static const Macro macrokeys[] = {
 };
 
 /* define chords here (i.e. functions that take more than one argument) */
-/*
-static const Chord chordkeys[] = {
-    c: delete from cursor to x, switch to insert mode
-    d: delete from cursor to x
-    f|F: find x on current line, move cursor there
-    r: replace char with x
-    t|T: find x on current line, move cursor just before there
-    y: yank from cursor to x
-}
-*/
+
+//static char *x = NULL;
+//static const Chord chordkeys[] = {
+/* key, 2nd key type(s), tests, action(s) */
+/* delete from cursor to x and switch to insert mode */
+//{ 'c', { f_move, f_moveboth, f_delete }, { t_rw, 0, 0, 0 }, 
+//    { f_delete,              f_toggle,            0,             0               }, 
+//    { { .m = x },            { .i = S_Mode },     { 0 },         { 0 }           } },
+/* delete from cursor to x */
+//{ 'd', { f_move, f_moveboth, f_delete }, { t_rw, 0, 0, 0 }, 
+//    { f_delete,              0,                   0,             0               }, 
+//    { { .m = x },            { 0 },               { 0 },         { 0 }           } },
+/* move to next occurance of x */
+//{ 'f', { 0, 0, 0 }, { 0, 0, 0, 0 }, 
+//    { f_findfw,              0,                   0,             0               },
+//    { { .v = x },            { 0 },               { 0 },         { 0 }           } },
+/* move to previous occurance of x */
+//{ 'F', { 0, 0, 0 }, { 0, 0, 0, 0 }, 
+//    { f_findbw,              0,                   0,             0               },
+//    { { .v = x },            { 0 },               { 0 },         { 0 }           } },
+/* replace currently highlighted character with x */
+//{ 'r', { 0, 0, 0 }, { 0, 0, 0, 0 }, 
+//    { ,              0,                   0,               0                   },
+//    { { .v = x },            { 0 },               { 0 },           { 0 }           } },
+//    r: replace char with x
+//    t|T: find x on current line, move cursor just before there
+//    y: yank from cursor to x
+//}
+
+
 #if HANDLE_MOUSE
 /*Mouse clicks */
 static const Click clks[] = {
